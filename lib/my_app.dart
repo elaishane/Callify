@@ -1,5 +1,6 @@
 import 'package:apphigh_tech_assignment/swipe_button.dart';
 import 'package:flutter/material.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class MyApp extends StatelessWidget {
   @override
@@ -45,7 +46,13 @@ class MyApp extends StatelessWidget {
                     ),
                   ),
                 ),
-                onChanged: (result) {},
+                onChanged: (result) async {
+                  if (result == SwipePosition.SwipeRight) {
+                    print("Swipe Right");
+                    await Permission.camera.request();
+                    await Permission.microphone.request();
+                  }
+                },
               ),
             ),
           ],
