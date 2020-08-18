@@ -2,6 +2,8 @@ import 'package:apphigh_tech_assignment/config.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
+import 'call_button.dart';
+
 void main() => runApp(MyApp());
 
 class MyApp extends StatelessWidget {
@@ -55,7 +57,7 @@ class HomePage extends StatelessWidget {
           ),
         ),
       ),
-      body: SwipeButton(),
+      body: CallButton(),
     );
   }
 }
