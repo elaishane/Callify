@@ -1,8 +1,8 @@
-import 'package:apphigh_tech_assignment/bottom_add_section.dart';
 import 'package:apphigh_tech_assignment/config.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
+import 'bottom_add_section.dart';
 import 'call_button.dart';
 
 void main() => runApp(MyApp());
