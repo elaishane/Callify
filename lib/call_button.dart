@@ -1,5 +1,6 @@
 import 'package:apphigh_tech_assignment/config.dart';
 import 'package:flutter/material.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class CallButton extends StatefulWidget {
   @override
@@ -32,25 +33,35 @@ class _CallButtonState extends State<CallButton>
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Container(
-        width: 100,
-        height: 100,
-        decoration: BoxDecoration(
-            color: AppConfig.appColor,
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.lightBlueAccent,
-                blurRadius: _animation.value,
-                spreadRadius: _animation.value,
-              ),
-            ]),
-        child: Icon(
-          Icons.videocam,
-          color: Colors.white,
-          size: 50.0,
+      child: InkWell(
+        onTap: () async {
+          await _requiredPermissions();
+        },
+        child: Container(
+          width: 100,
+          height: 100,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+              color: AppConfig.appColor,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.lightBlueAccent,
+                  blurRadius: _animation.value,
+                  spreadRadius: _animation.value,
+                ),
+              ]),
+          child: Icon(
+            Icons.videocam,
+            color: Colors.white,
+            size: 50.0,
+          ),
         ),
       ),
     );
+  }
+
+  Future<void> _requiredPermissions() async {
+    await [Permission.camera, Permission.microphone].request();
   }
 }
