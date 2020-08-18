@@ -1,8 +1,6 @@
 import 'package:firebase_admob/firebase_admob.dart';
 import 'package:flutter/material.dart';
 
-const String testDeviceId = "";
-
 class BottomAdSection extends StatefulWidget {
   @override
   _BottomAdSectionState createState() => _BottomAdSectionState();
@@ -47,6 +45,9 @@ class _BottomAdSectionState extends State<BottomAdSection> {
 
   @override
   Widget build(BuildContext context) {
-    return Container();
+    return Container(
+      width: 0.0,
+      height: 0.0,
+    );
   }
 }
