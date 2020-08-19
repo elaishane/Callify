@@ -11,42 +11,57 @@ class _CallPageState extends State<CallPage> {
   static final _users = <int>[];
   final _infoStrings = <String>[];
   bool muted = false;
+  bool video_mute = false;
+
+  @override
+  void dispose() {
+    // clear users
+    _users.clear();
+    // destroy sdk
+    AgoraRtcEngine.leaveChannel();
+    AgoraRtcEngine.destroy();
+    super.dispose();
+  }
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
+    // initialize agora sdk
     initialize();
   }
 
   Future<void> initialize() async {
     if (AppConfig.agora_App_Id.isEmpty) {
       setState(() {
-        _infoStrings.add("App Id is missing, please provide your App Id");
-        _infoStrings.add("Agora Engine is not working");
+        _infoStrings.add(
+          'APP_ID missing, please provide your APP_ID in settings.dart',
+        );
+        _infoStrings.add('Agora Engine is not starting');
       });
       return;
     }
+
     await _initAgoraRtcEngine();
     _addAgoraEventHandlers();
+    await AgoraRtcEngine.enableWebSdkInteroperability(true);
     VideoEncoderConfiguration configuration = VideoEncoderConfiguration();
     configuration.dimensions = Size(1920, 1080);
     await AgoraRtcEngine.setVideoEncoderConfiguration(configuration);
     await AgoraRtcEngine.joinChannel(null, "1234", null, 0);
   }
 
-  // Let us create Agora SDK and initialize
+  /// Create agora sdk instance and initialize
   Future<void> _initAgoraRtcEngine() async {
     await AgoraRtcEngine.create(AppConfig.agora_App_Id);
     await AgoraRtcEngine.enableVideo();
     await AgoraRtcEngine.setChannelProfile(ChannelProfile.Communication);
   }
 
-  //Add agora event handlers
+  /// Add agora event handlers
   void _addAgoraEventHandlers() {
     AgoraRtcEngine.onError = (dynamic code) {
       setState(() {
-        final info = "onError: $code";
+        final info = 'onError: $code';
         _infoStrings.add(info);
       });
     };
@@ -57,21 +72,29 @@ class _CallPageState extends State<CallPage> {
       int elapsed,
     ) {
       setState(() {
-        final info = "onJoinChannel: $channel, uid: $uid";
+        final info = 'onJoinChannel: $channel, uid: $uid';
         _infoStrings.add(info);
       });
     };
 
     AgoraRtcEngine.onLeaveChannel = () {
       setState(() {
-        _infoStrings.add("Leave Channel");
+        _infoStrings.add('onLeaveChannel');
         _users.clear();
+      });
+    };
+
+    AgoraRtcEngine.onUserJoined = (int uid, int elapsed) {
+      setState(() {
+        final info = 'userJoined: $uid';
+        _infoStrings.add(info);
+        _users.add(uid);
       });
     };
 
     AgoraRtcEngine.onUserOffline = (int uid, int reason) {
       setState(() {
-        final info = "userOffline: $reason";
+        final info = 'userOffline: $uid';
         _infoStrings.add(info);
         _users.remove(uid);
       });
@@ -90,27 +113,19 @@ class _CallPageState extends State<CallPage> {
     };
   }
 
-  //Helper function to get the List of native views
+  /// Helper function to get list of native views
   List<Widget> _getRenderViews() {
     final List<AgoraRenderWidget> list = [];
-    list.add(AgoraRenderWidget(
-      0,
-      local: true,
-      preview: true,
-    ));
-    _users.forEach((int uid) => list.add(
-          AgoraRenderWidget(uid),
-        ));
+
+    list.add(AgoraRenderWidget(0, local: true, preview: true));
+
+    _users.forEach((int uid) => list.add(AgoraRenderWidget(uid)));
     return list;
   }
 
-  //Video wrapping View
+  /// Video view wrapper
   Widget _videoView(view) {
-    return Expanded(
-      child: Container(
-        child: view,
-      ),
-    );
+    return Expanded(child: Container(child: view));
   }
 
   /// Video view row wrapper
@@ -134,10 +149,21 @@ class _CallPageState extends State<CallPage> {
         ));
       case 2:
         return Container(
-            child: Column(
+            child: Stack(
           children: <Widget>[
-            _expandedVideoRow([views[0]]),
-            _expandedVideoRow([views[1]])
+            _expandedVideoRow([views[1]]),
+            Positioned(
+              right: 0,
+              bottom: 120,
+              child: Container(
+                height: 100.0,
+                width: 100.0,
+                alignment: Alignment.bottomRight,
+                child: _expandedVideoRow(
+                  [views[0]],
+                ),
+              ),
+            ),
           ],
         ));
       case 3:
@@ -161,29 +187,14 @@ class _CallPageState extends State<CallPage> {
     return Container();
   }
 
-  void _onCallEnd(BuildContext context) {
-    Navigator.pop(context);
-    AgoraRtcEngine.leaveChannel();
-  }
-
-  void _onToggleMute() {
-    setState(() {
-      muted = !muted;
-    });
-    AgoraRtcEngine.muteLocalAudioStream(muted);
-  }
-
-  void _onSwitchCamera() {
-    AgoraRtcEngine.switchCamera();
-  }
-
-  Widget _toolBar() {
+  /// Toolbar layout
+  Widget _toolbar() {
     return Container(
       alignment: Alignment.bottomCenter,
       padding: const EdgeInsets.symmetric(vertical: 48),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
-        children: [
+        children: <Widget>[
           RawMaterialButton(
             onPressed: _onToggleMute,
             child: Icon(
@@ -209,15 +220,15 @@ class _CallPageState extends State<CallPage> {
             padding: const EdgeInsets.all(15.0),
           ),
           RawMaterialButton(
-            onPressed: _onSwitchCamera,
+            onPressed: _onToggleVideo,
             child: Icon(
-              Icons.switch_camera,
-              color: Colors.blueAccent,
+              video_mute ? Icons.videocam_off : Icons.videocam,
+              color: video_mute ? Colors.black : Colors.white,
               size: 20.0,
             ),
             shape: CircleBorder(),
             elevation: 2.0,
-            fillColor: Colors.white,
+            fillColor: video_mute ? Colors.white : Colors.black,
             padding: const EdgeInsets.all(12.0),
           )
         ],
@@ -225,66 +236,101 @@ class _CallPageState extends State<CallPage> {
     );
   }
 
-  /// Info panel to show logs
-  Widget _panel() {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 48),
-      alignment: Alignment.bottomCenter,
-      child: FractionallySizedBox(
-        heightFactor: 0.5,
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 48),
-          child: ListView.builder(
-            reverse: true,
-            itemCount: _infoStrings.length,
-            itemBuilder: (BuildContext context, int index) {
-              if (_infoStrings.isEmpty) {
-                return null;
-              }
-              return Padding(
-                padding: const EdgeInsets.symmetric(
-                  vertical: 3,
-                  horizontal: 10,
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Flexible(
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          vertical: 2,
-                          horizontal: 5,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.yellowAccent,
-                          borderRadius: BorderRadius.circular(5),
-                        ),
-                        child: Text(
-                          _infoStrings[index],
-                          style: TextStyle(color: Colors.blueGrey),
-                        ),
-                      ),
-                    )
-                  ],
-                ),
-              );
-            },
-          ),
-        ),
-      ),
+//  /// Info panel to show logs
+//  Widget _panel() {
+//    return Container(
+//      padding: const EdgeInsets.symmetric(vertical: 48),
+//      alignment: Alignment.bottomCenter,
+//      child: FractionallySizedBox(
+//        heightFactor: 0.5,
+//        child: Container(
+//          padding: const EdgeInsets.symmetric(vertical: 48),
+//          child: ListView.builder(
+//            reverse: true,
+//            itemCount: _infoStrings.length,
+//            itemBuilder: (BuildContext context, int index) {
+//              if (_infoStrings.isEmpty) {
+//                return null;
+//              }
+//              return Padding(
+//                padding: const EdgeInsets.symmetric(
+//                  vertical: 3,
+//                  horizontal: 10,
+//                ),
+//                child: Row(
+//                  mainAxisSize: MainAxisSize.min,
+//                  children: [
+//                    Flexible(
+//                      child: Container(
+//                        padding: const EdgeInsets.symmetric(
+//                          vertical: 2,
+//                          horizontal: 5,
+//                        ),
+//                        decoration: BoxDecoration(
+//                          color: Colors.yellowAccent,
+//                          borderRadius: BorderRadius.circular(5),
+//                        ),
+//                        child: Text(
+//                          _infoStrings[index],
+//                          style: TextStyle(color: Colors.blueGrey),
+//                        ),
+//                      ),
+//                    )
+//                  ],
+//                ),
+//              );
+//            },
+//          ),
+//        ),
+//      ),
+//    );
+//  }
+
+  void _onCallEnd(BuildContext context) {
+    Navigator.pop(context);
+  }
+
+  void _onToggleMute() {
+    setState(() {
+      muted = !muted;
+    });
+    AgoraRtcEngine.muteLocalAudioStream(muted);
+  }
+
+  void _onToggleVideo() async {
+    setState(() {
+      video_mute = !video_mute;
+    });
+    AgoraRtcEngine.muteLocalVideoStream(
+      video_mute,
     );
+
+    await AgoraRtcEngine.enableLocalVideo(video_mute);
+  }
+
+  void _onSwitchCamera() async {
+    await AgoraRtcEngine.switchCamera();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(),
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.switch_camera),
+            onPressed: _onSwitchCamera,
+          ),
+        ],
+      ),
       body: Center(
         child: Stack(
           children: <Widget>[
             _viewRows(),
-            _panel(),
-            _toolBar(),
+            //_panel(),
+            _toolbar(),
           ],
         ),
       ),
