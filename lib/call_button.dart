@@ -1,3 +1,4 @@
+import 'package:apphigh_tech_assignment/call_page.dart';
 import 'package:apphigh_tech_assignment/config.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -36,6 +37,11 @@ class _CallButtonState extends State<CallButton>
       child: InkWell(
         onTap: () async {
           await _requiredPermissions();
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => CallPage(),
+            ),
+          );
         },
         child: Container(
           width: 100,
