@@ -41,6 +41,7 @@ class _BottomAdSectionState extends State<BottomAdSection> {
   void dispose() {
     // TODO: implement dispose
     super.dispose();
+
     _bannerAd?.dispose();
   }
 
