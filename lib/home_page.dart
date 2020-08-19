@@ -1,3 +1,6 @@
+import 'package:apphigh_tech_assignment/bottom_add_section.dart';
+import 'package:apphigh_tech_assignment/call_button.dart';
+import 'package:apphigh_tech_assignment/config.dart';
 import 'package:flutter/material.dart';
 
 class HomePage extends StatelessWidget {
