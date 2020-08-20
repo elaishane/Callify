@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:apphigh_tech_assignment/config.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 class CallPage extends StatefulWidget {
   @override
@@ -12,7 +15,7 @@ class _CallPageState extends State<CallPage> {
   final _infoStrings = <String>[];
   bool muted = false;
   bool video_mute = false;
-
+  Timer _timer;
   @override
   void dispose() {
     // clear users
@@ -21,6 +24,19 @@ class _CallPageState extends State<CallPage> {
     AgoraRtcEngine.leaveChannel();
     AgoraRtcEngine.destroy();
     super.dispose();
+  }
+
+  void _startTime() {
+    _timer = Timer(Duration(seconds: 15), () {
+      Navigator.pop(context);
+      Fluttertoast.showToast(
+        msg: "Please try again after some time",
+        gravity: ToastGravity.BOTTOM,
+        toastLength: Toast.LENGTH_SHORT,
+        backgroundColor: Colors.black,
+      );
+    });
+    _infoStrings.add(_timer.isActive.toString());
   }
 
   @override
@@ -143,17 +159,22 @@ class _CallPageState extends State<CallPage> {
     final views = _getRenderViews();
     switch (views.length) {
       case 1:
+        _startTime();
+        _infoStrings.add(_timer.tick.toString());
         return Container(
             child: Column(
           children: <Widget>[_videoView(views[0])],
         ));
       case 2:
+        _timer.cancel();
+        _infoStrings.add(_timer.tick.toString());
+        _infoStrings.add(_timer.isActive.toString());
         return Container(
             child: Stack(
           children: <Widget>[
             _expandedVideoRow([views[1]]),
             Positioned(
-              right: 0,
+              right: 10,
               bottom: 120,
               child: Container(
                 height: 100.0,
@@ -167,6 +188,7 @@ class _CallPageState extends State<CallPage> {
           ],
         ));
       case 3:
+        _timer.cancel();
         return Container(
             child: Column(
           children: <Widget>[
@@ -175,6 +197,7 @@ class _CallPageState extends State<CallPage> {
           ],
         ));
       case 4:
+        _timer.cancel();
         return Container(
             child: Column(
           children: <Widget>[
@@ -236,55 +259,55 @@ class _CallPageState extends State<CallPage> {
     );
   }
 
-//  /// Info panel to show logs
-//  Widget _panel() {
-//    return Container(
-//      padding: const EdgeInsets.symmetric(vertical: 48),
-//      alignment: Alignment.bottomCenter,
-//      child: FractionallySizedBox(
-//        heightFactor: 0.5,
-//        child: Container(
-//          padding: const EdgeInsets.symmetric(vertical: 48),
-//          child: ListView.builder(
-//            reverse: true,
-//            itemCount: _infoStrings.length,
-//            itemBuilder: (BuildContext context, int index) {
-//              if (_infoStrings.isEmpty) {
-//                return null;
-//              }
-//              return Padding(
-//                padding: const EdgeInsets.symmetric(
-//                  vertical: 3,
-//                  horizontal: 10,
-//                ),
-//                child: Row(
-//                  mainAxisSize: MainAxisSize.min,
-//                  children: [
-//                    Flexible(
-//                      child: Container(
-//                        padding: const EdgeInsets.symmetric(
-//                          vertical: 2,
-//                          horizontal: 5,
-//                        ),
-//                        decoration: BoxDecoration(
-//                          color: Colors.yellowAccent,
-//                          borderRadius: BorderRadius.circular(5),
-//                        ),
-//                        child: Text(
-//                          _infoStrings[index],
-//                          style: TextStyle(color: Colors.blueGrey),
-//                        ),
-//                      ),
-//                    )
-//                  ],
-//                ),
-//              );
-//            },
-//          ),
-//        ),
-//      ),
-//    );
-//  }
+  /// Info panel to show logs
+  Widget _panel() {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 48),
+      alignment: Alignment.bottomCenter,
+      child: FractionallySizedBox(
+        heightFactor: 0.5,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 48),
+          child: ListView.builder(
+            reverse: true,
+            itemCount: _infoStrings.length,
+            itemBuilder: (BuildContext context, int index) {
+              if (_infoStrings.isEmpty) {
+                return null;
+              }
+              return Padding(
+                padding: const EdgeInsets.symmetric(
+                  vertical: 3,
+                  horizontal: 10,
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Flexible(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 2,
+                          horizontal: 5,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.yellowAccent,
+                          borderRadius: BorderRadius.circular(5),
+                        ),
+                        child: Text(
+                          _infoStrings[index],
+                          style: TextStyle(color: Colors.blueGrey),
+                        ),
+                      ),
+                    )
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
 
   void _onCallEnd(BuildContext context) {
     Navigator.pop(context);
@@ -329,7 +352,7 @@ class _CallPageState extends State<CallPage> {
         child: Stack(
           children: <Widget>[
             _viewRows(),
-            //_panel(),
+            _panel(),
             _toolbar(),
           ],
         ),
