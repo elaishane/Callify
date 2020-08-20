@@ -19,11 +19,6 @@ class HomePage extends StatelessWidget {
                 width: 70,
                 filterQuality: FilterQuality.high,
               ),
-//              Icon(
-//                Icons.video_call,
-//                color: Colors.white,
-//                size: 75.0,
-//              ),
               Text(
                 "callify",
                 style: Theme.of(context).textTheme.headline5.copyWith(
