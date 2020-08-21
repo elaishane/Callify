@@ -18,25 +18,11 @@ class _CallPageState extends State<CallPage> {
   Timer _timer;
   @override
   void dispose() {
-    // clear users
     _users.clear();
-    // destroy sdk
+
     AgoraRtcEngine.leaveChannel();
     AgoraRtcEngine.destroy();
     super.dispose();
-  }
-
-  void _startTime() {
-    _timer = Timer(Duration(seconds: 15), () {
-      Navigator.pop(context);
-      Fluttertoast.showToast(
-        msg: "Please try again after some time",
-        gravity: ToastGravity.BOTTOM,
-        toastLength: Toast.LENGTH_SHORT,
-        backgroundColor: Colors.black,
-      );
-    });
-    _infoStrings.add(_timer.isActive.toString());
   }
 
   @override
@@ -159,31 +145,29 @@ class _CallPageState extends State<CallPage> {
     final views = _getRenderViews();
     switch (views.length) {
       case 1:
-        _startTime();
-        _infoStrings.add(_timer.tick.toString());
+        _timer = Timer(Duration(seconds: 15), () {
+          Navigator.pop(context);
+          Fluttertoast.showToast(
+            msg: "Please try again after some time",
+            gravity: ToastGravity.BOTTOM,
+            toastLength: Toast.LENGTH_SHORT,
+            backgroundColor: Colors.black,
+          );
+        });
+        _infoStrings.add(_timer.isActive.toString());
         return Container(
             child: Column(
           children: <Widget>[_videoView(views[0])],
         ));
       case 2:
         _timer.cancel();
-        _infoStrings.add(_timer.tick.toString());
         _infoStrings.add(_timer.isActive.toString());
         return Container(
-            child: Stack(
+            child: Column(
           children: <Widget>[
             _expandedVideoRow([views[1]]),
-            Positioned(
-              right: 10,
-              bottom: 120,
-              child: Container(
-                height: 100.0,
-                width: 100.0,
-                alignment: Alignment.bottomRight,
-                child: _expandedVideoRow(
-                  [views[0]],
-                ),
-              ),
+            _expandedVideoRow(
+              [views[0]],
             ),
           ],
         ));
@@ -338,7 +322,6 @@ class _CallPageState extends State<CallPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         actions: [
