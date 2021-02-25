@@ -1,4 +1,6 @@
-# apphigh_tech_assignment
+# Callify
+
+This Application was submitted as an entry demo for the internship application
 
 A new Flutter application.
 
